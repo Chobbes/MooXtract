@@ -27,38 +27,63 @@ import System.Directory
 import System.FilePath
 import System.Environment
 import Data.List.Split
+import Data.List
+import Control.Arrow
+import Codec.Archive.Zip
+import Codec.Archive.Tar as Tar
+import Codec.Compression.GZip as GZip
+import Codec.Compression.BZip as BZip
+import qualified Data.ByteString.Lazy as BS
 
-
-tarExtensions = [".tar.gz", ".tar.bz2", ".gz", ".bz2"]
+-- | File extensions for different archive formats
+tarExtensions = [".tar"]
+tgzExtensions = [".tar.gz", ".gz"]
+tbzExtensions = ["tar.bz2", ".bz2"]
 zipExtensions = [".zip"]
 
--- File extensions that we allow
-legalExtensions = tarExtensions ++ zipExtensions
+-- | All file extensions that we allow
+legalExtensions = tarExtensions ++ tgzExtensions ++ tbzExtensions ++ zipExtensions
 
--- Make directories for each student.
-makeDirs :: [FilePath] -> IO [()]
-makeDirs paths = sequence $ map (createDirectory . dropExtensions) paths
-
-
--- Make directories for students
--- Move the student's submission to their directory
--- Extract the student's submission in their directory
-
-
--- We assume that students don't put extra periods in there file names.
--- This assumption is often false...
-hasLegalExtension :: FilePath -> Bool
-hasLegalExtension name = any (== takeExtensions name ) legalExtensions
-
--- We want to get the names of the students who broke stuff.
-getIllegal :: [FilePath] -> [FilePath]
-getIllegal = filter (not . hasLegalExtension)
-
--- Find all of the students where everything is hopefully fine.
-getLegal :: [FilePath] -> [FilePath]
-getLegal = filter hasLegalExtension
 
 main = do
-  [dir] <- getArgs
-  files <- getDirectoryContents dir
-  makeDirs $ getLegal files
+  files <- getDirectoryContents "."
+  let (legal, illegal) = partition hasLegalExtension files
+  print illegal
+  mapM makeDir legal
+
+
+-- | Assumes that students don't put extra periods in there file names. Often false.
+hasLegalExtension :: FilePath -> Bool
+hasLegalExtension name = takeExtensions name `elem` legalExtensions
+
+-- | Create a submission directory and extract archive for submission in it.
+makeDir path = do
+  createDirectory dir
+  renameFile path archivePath
+  extractSub archivePath
+    where dir = dropExtensions path
+          archivePath = joinPath [dir, path]
+
+-- | Extract archive depending on file extension.
+extractSub path
+  | extension `elem` tarExtensions = extract dir path
+  | extension `elem` tgzExtensions = extractTgz dir path
+  | extension `elem` tbzExtensions = extractTbz2 dir path
+  | extension `elem` zipExtensions = extractZip dir path
+  | otherwise = error $ "Unknown extension: " ++ extension
+  where extension = takeExtensions path
+        dir = dropFileName path
+
+-- | Blatantly stolen from here: http://hackage.haskell.org/package/tar-0.4.0.1/docs/Codec-Archive-Tar.html
+extractTgz dir tar = unpack dir . Tar.read . GZip.decompress =<< BS.readFile tar
+extractTbz2 dir tar = unpack dir . Tar.read . BZip.decompress =<< BS.readFile tar
+
+-- | Unzip a .zip archive.
+extractZip path archive = do
+      prevPath <- getCurrentDirectory
+      setCurrentDirectory path
+      archData <- BS.readFile archiveFile
+      extractFilesFromArchive [] (toArchive archData)
+      setCurrentDirectory prevPath
+        where
+          archiveFile = takeFileName archive
