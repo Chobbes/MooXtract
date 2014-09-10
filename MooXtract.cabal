@@ -17,4 +17,4 @@ cabal-version:       >=1.8
 executable MooXtract
   main-is: MooXtract.hs
   -- other-modules:    
-  build-depends:       filepath, directory, tar, zip-archive, base ==4.6.*
+  build-depends:       split, filepath, directory, tar, zip-archive, base ==4.6.*
