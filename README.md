@@ -3,6 +3,13 @@ MooXtract
 
 A simple Haskell program for extracting Moodle submissions.
 
+Installation
+------------
+
+It should just install with cabal.
+
+    cabal install --bindir=/path/to/where/you/want/the/bin
+
 Usage
 -----
 
