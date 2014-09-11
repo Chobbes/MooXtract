@@ -6,7 +6,8 @@ A simple Haskell program for extracting Moodle submissions.
 Installation
 ------------
 
-It should just install with cabal.
+It should just install with cabal. You will probably want to install
+the [Haskell Platform](https://www.haskell.org/platform/).
 
     cabal install --bindir=/path/to/where/you/want/the/bin
 
