@@ -8,7 +8,7 @@ Usage
 
 Currently MooXtract should be used as follows. First download the
 giant .zip archive of all of the moodle submissions. Let's say this is
-called //submissions.zip//, then in order to extract all of them into
+called `submissions.zip`, then in order to extract all of them into
 a marking directory you might do:
 
     mkdir marking
