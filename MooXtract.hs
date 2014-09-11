@@ -35,6 +35,10 @@ import Codec.Compression.GZip as GZip
 import Codec.Compression.BZip as BZip
 import qualified Data.ByteString.Lazy as BS
 
+
+-- | Directory entries we wish to ignore
+dirIgnore = [".", ".."]
+
 -- | File extensions for different archive formats
 tarExtensions = [".tar"]
 tgzExtensions = [".tar.gz", ".gz"]
@@ -47,9 +51,12 @@ legalExtensions = tarExtensions ++ tgzExtensions ++ tbzExtensions ++ zipExtensio
 
 main = do
   files <- getDirectoryContents "."
-  let (legal, illegal) = partition hasLegalExtension files
-  print illegal
+  let (legal, illegal) = partition hasLegalExtension $ filter (`notElem` dirIgnore) files
+  putStrLn "Possible baddies:"
+  putStrLn $ intercalate "\n" illegal
+  putStrLn "Extracting..."
   mapM makeDir legal
+  putStrLn "Done!"
 
 
 -- | Assumes that students don't put extra periods in there file names. Often false.
