@@ -14,7 +14,7 @@ the [Haskell Platform](https://www.haskell.org/platform/).
 Debian / Ubuntu Install
 -----------------------
 
-    git clone git@github.com:Chobbes/MooXtract.git
+    git clone https://github.com/Chobbes/MooXtract.git
     cd MooXtract
     sudo apt-get install cabal-install
     cabal update
