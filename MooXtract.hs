@@ -68,7 +68,7 @@ makeDir path = do
   createDirectory dir
   renameFile path archivePath
   extractSub archivePath
-    where dir = dropExtensions path
+    where dir = (map (\c -> if c == ' ' then '_' else c) . dropExtensions) path
           archivePath = joinPath [dir, path]
 
 -- | Extract archive depending on file extension.
