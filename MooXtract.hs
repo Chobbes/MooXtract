@@ -25,10 +25,7 @@
 
 import System.Directory
 import System.FilePath
-import System.Environment
-import Data.List.Split
 import Data.List
-import Control.Arrow
 import Codec.Archive.Zip
 import Codec.Archive.Tar as Tar
 import Codec.Compression.GZip as GZip
@@ -48,7 +45,7 @@ zipExtensions = [".zip"]
 -- | All file extensions that we allow
 legalExtensions = tarExtensions ++ tgzExtensions ++ tbzExtensions ++ zipExtensions
 
-
+main :: IO ()
 main = do
   files <- getDirectoryContents "."
   let (legal, illegal) = partition hasLegalExtension $ filter (`notElem` dirIgnore) files
@@ -64,6 +61,7 @@ hasLegalExtension :: FilePath -> Bool
 hasLegalExtension name = takeExtensions name `elem` legalExtensions
 
 -- | Create a submission directory and extract archive for submission in it.
+makeDir :: FilePath -> IO ()
 makeDir path = do
   createDirectory dir
   renameFile path archivePath
@@ -72,6 +70,7 @@ makeDir path = do
           archivePath = joinPath [dir, path]
 
 -- | Extract archive depending on file extension.
+extractSub :: FilePath -> IO ()
 extractSub path
   | extension `elem` tarExtensions = extract dir path
   | extension `elem` tgzExtensions = extractTgz dir path
@@ -82,10 +81,15 @@ extractSub path
         dir = dropFileName path
 
 -- | Blatantly stolen from here: http://hackage.haskell.org/package/tar-0.4.0.1/docs/Codec-Archive-Tar.html
+extractTgz :: FilePath -> FilePath -> IO ()
 extractTgz dir tar = unpack dir . Tar.read . GZip.decompress =<< BS.readFile tar
+
+-- | Blatantly stolen from here: http://hackage.haskell.org/package/tar-0.4.0.1/docs/Codec-Archive-Tar.html
+extractTbz2 :: FilePath -> FilePath -> IO ()
 extractTbz2 dir tar = unpack dir . Tar.read . BZip.decompress =<< BS.readFile tar
 
 -- | Unzip a .zip archive.
+extractZip :: FilePath -> FilePath -> IO ()
 extractZip path archive = do
       prevPath <- getCurrentDirectory
       setCurrentDirectory path
